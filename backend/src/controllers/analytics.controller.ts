@@ -13,7 +13,7 @@ export const getAdminAnalytics = async (req: AuthenticatedRequest, res: Response
       select: { amount: true },
     });
     
-    const totalRevenue = successfulPayments.reduce((acc, curr) => acc + curr.amount, 0);
+    const totalRevenue = successfulPayments.reduce((acc: number, curr: any) => acc + curr.amount, 0);
 
     const totalAttempts = await prisma.examAttempt.count();
     const passedAttempts = await prisma.examAttempt.count({ where: { isPassed: true } });

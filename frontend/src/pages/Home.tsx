@@ -29,7 +29,7 @@ export default function Home({ user, onNavigate, courses, onEnroll, onOpenPaymen
         <div className="max-w-4xl mx-auto text-center space-y-6 relative z-10">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold uppercase tracking-wider">
             <span className="flex h-2 w-2 rounded-full bg-indigo-400 animate-ping" />
-            WAEC & UTME Sciences 2026 Session
+            WAEC & UTME Sciences Academy Portal
           </div>
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-none">
             Ace Your Science Exams <br/>

@@ -9,7 +9,6 @@ export default function Register({ onNavigate }: RegisterProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'STUDENT' | 'TEACHER' | 'ADMIN'>('STUDENT');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,7 +23,7 @@ export default function Register({ onNavigate }: RegisterProps) {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, role }),
+        body: JSON.stringify({ name, email, password }),
       });
 
       const data = await response.json();
@@ -113,27 +112,6 @@ export default function Register({ onNavigate }: RegisterProps) {
                 minLength={6}
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
               />
-            </div>
-          </div>
-
-          {/* Account Role Selector */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Register As</label>
-            <div className="grid grid-cols-3 gap-2">
-              {(['STUDENT', 'TEACHER', 'ADMIN'] as const).map((r) => (
-                <button
-                  type="button"
-                  key={r}
-                  onClick={() => setRole(r)}
-                  className={`py-2 text-xs font-bold border rounded-xl transition-all ${
-                    role === r
-                      ? 'border-primary bg-primary/5 text-primary'
-                      : 'border-border bg-card text-muted-foreground hover:bg-muted'
-                  }`}
-                >
-                  {r === 'TEACHER' ? 'Teacher' : r === 'ADMIN' ? 'Admin' : 'Student'}
-                </button>
-              ))}
             </div>
           </div>
 

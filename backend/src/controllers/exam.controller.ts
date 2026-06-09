@@ -153,7 +153,7 @@ export const submitAttempt = async (req: AuthenticatedRequest, res: Response) =>
     const questions = attempt.assessment.questions;
     let correctAnswers = 0;
 
-    questions.forEach((q) => {
+    questions.forEach((q: any) => {
       const selected = answers[q.id];
       if (selected === q.correctAnswer) {
         correctAnswers++;
@@ -201,7 +201,7 @@ export const submitAttempt = async (req: AuthenticatedRequest, res: Response) =>
     // Prepare full results with question explanations so the user can review
     res.json({
       attempt: updatedAttempt,
-      review: questions.map((q) => ({
+      review: questions.map((q: any) => ({
         id: q.id,
         questionText: q.questionText,
         optionA: q.optionA,

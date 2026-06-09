@@ -29,7 +29,7 @@ export const register = async (req: Request, res: Response) => {
         email,
         password: hashedPassword,
         name,
-        role: role && ['ADMIN', 'TEACHER', 'STUDENT'].includes(role) ? role : 'STUDENT',
+        role: 'STUDENT', // Force all public registration to be STUDENT
       },
     });
 
@@ -113,5 +113,56 @@ export const getProfile = async (req: AuthenticatedRequest, res: Response) => {
     res.json(user);
   } catch (error: any) {
     res.status(500).json({ message: 'Server error loading profile', error: error.message });
+  }
+};
+
+// Admin User Manager: List all users
+export const getAllUsers = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(users);
+  } catch (error: any) {
+    res.status(500).json({ message: 'Error retrieving users list', error: error.message });
+  }
+};
+
+// Admin User Manager: Update user role
+export const updateUserRole = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { role } = req.body;
+
+    if (!['ADMIN', 'TEACHER', 'STUDENT'].includes(role)) {
+      return res.status(400).json({ message: 'Invalid role parameter' });
+    }
+
+    // Optional safety: Prevent the logged-in admin from demoting themselves!
+    if (req.user?.id === userId) {
+      return res.status(400).json({ message: 'Self demotion is disabled for security reasons.' });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { role },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+      },
+    });
+
+    res.json({ message: 'User role updated successfully', user: updatedUser });
+  } catch (error: any) {
+    res.status(500).json({ message: 'Error updating user role', error: error.message });
   }
 };

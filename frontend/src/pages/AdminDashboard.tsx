@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, BookOpen, FileText, CreditCard, PlusCircle, AlertCircle, Trash2, CheckCircle2 } from 'lucide-react';
+import { LayoutDashboard, BookOpen, FileText, CreditCard, PlusCircle, AlertCircle, Trash2, CheckCircle2, Users } from 'lucide-react';
 
 interface AdminDashboardProps {
   token: string;
@@ -9,9 +9,11 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ token, onNavigate, courses, onRefreshCourses }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<'ANALYTICS' | 'COURSES' | 'CBT' | 'TRANSACTIONS'>('ANALYTICS');
+  const [activeTab, setActiveTab] = useState<'ANALYTICS' | 'COURSES' | 'CBT' | 'TRANSACTIONS' | 'USERS'>('ANALYTICS');
   const [analytics, setAnalytics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<any[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   // Forms states
   const [courseTitle, setCourseTitle] = useState('');
@@ -61,8 +63,49 @@ export default function AdminDashboard({ token, onNavigate, courses, onRefreshCo
       }
     };
 
-    fetchAnalytics();
+    const fetchUsers = async () => {
+      setLoadingUsers(true);
+      try {
+        const response = await fetch('/api/admin/users', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        setUsers(data);
+      } catch (error) {
+        console.error('Error fetching users list', error);
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+
+    if (activeTab === 'USERS') {
+      fetchUsers();
+    } else {
+      fetchAnalytics();
+    }
   }, [token, activeTab]);
+
+  const handleUpdateRole = async (userId: string, newRole: string) => {
+    setMessage('');
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/role`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ role: newRole }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to update user role');
+
+      setMessage(data.message || 'User role updated successfully');
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
+    } catch (err: any) {
+      setMessage(`Error: ${err.message}`);
+    }
+  };
 
   const handleCreateCourse = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -283,6 +326,15 @@ export default function AdminDashboard({ token, onNavigate, courses, onRefreshCo
           >
             <CreditCard size={14} />
             <span>Payments History</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('USERS')}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg transition-colors ${
+              activeTab === 'USERS' ? 'bg-primary text-white shadow' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Users size={14} />
+            <span>Users Management</span>
           </button>
         </div>
       </div>
@@ -812,6 +864,65 @@ export default function AdminDashboard({ token, onNavigate, courses, onRefreshCo
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* Users Management Tab */}
+      {activeTab === 'USERS' && (
+        <div className="bg-card rounded-2xl border border-border overflow-hidden animate-in fade-in duration-200">
+          {loadingUsers ? (
+            <div className="p-8 text-center text-muted-foreground flex items-center justify-center gap-2">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <span>Loading users list...</span>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-muted/50 border-b border-border font-bold text-muted-foreground uppercase tracking-wider text-[10px]">
+                    <th className="p-4">Name</th>
+                    <th className="p-4">Email</th>
+                    <th className="p-4">Registered Date</th>
+                    <th className="p-4">Current Role</th>
+                    <th className="p-4">Action Options</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border font-medium">
+                  {users.length > 0 ? (
+                    users.map((u: any) => (
+                      <tr key={u.id} className="hover:bg-muted/10 transition-colors">
+                        <td className="p-4 font-bold">{u.name}</td>
+                        <td className="p-4">{u.email}</td>
+                        <td className="p-4 text-muted-foreground">{new Date(u.createdAt).toLocaleDateString()}</td>
+                        <td className="p-4">
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                            u.role === 'ADMIN' ? 'bg-red-500/10 text-red-500' : u.role === 'TEACHER' ? 'bg-amber-500/10 text-amber-500' : 'bg-indigo-500/10 text-indigo-500'
+                          }`}>{u.role}</span>
+                        </td>
+                        <td className="p-4">
+                          <select
+                            value={u.role}
+                            onChange={(e) => handleUpdateRole(u.id, e.target.value)}
+                            className="px-2 py-1 text-[11px] rounded-lg border border-input bg-card focus:outline-none"
+                          >
+                            <option value="STUDENT">Student</option>
+                            <option value="TEACHER">Teacher</option>
+                            <option value="ADMIN">Admin</option>
+                          </select>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="p-8 text-center text-muted-foreground">
+                        No registered users found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </div>

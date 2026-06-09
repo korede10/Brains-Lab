@@ -106,6 +106,10 @@ app.post('/api/ai/solve', authenticateJWT, aiController.solveQuestion);
 app.get('/api/analytics/admin', authenticateJWT, requireRoles(['ADMIN', 'TEACHER']), analyticsController.getAdminAnalytics);
 app.get('/api/analytics/student', authenticateJWT, analyticsController.getStudentAnalytics);
 
+// Admin User Management
+app.get('/api/admin/users', authenticateJWT, requireRoles(['ADMIN']), authController.getAllUsers);
+app.put('/api/admin/users/:userId/role', authenticateJWT, requireRoles(['ADMIN']), authController.updateUserRole);
+
 // Global Error Handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);
